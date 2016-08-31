@@ -66,9 +66,19 @@ void TIntermSymbol::traverse(TIntermTraverser *it)
     it->visitSymbol(this);
 }
 
+glslang::TSourceLoc* TIntermSymbol::getSourceLine()
+{
+    return &loc;
+}
+
 void TIntermConstantUnion::traverse(TIntermTraverser *it)
 {
     it->visitConstantUnion(this);
+}
+
+glslang::TSourceLoc* TIntermConstantUnion::getSourceLine()
+{
+    return &loc;
 }
 
 //
@@ -121,6 +131,11 @@ void TIntermBinary::traverse(TIntermTraverser *it)
         it->visitBinary(EvPostVisit, this);
 }
 
+glslang::TSourceLoc* TIntermBinary::getSourceLine()
+{
+    return left->getSourceLine();
+}
+
 //
 // Traverse a unary node.  Same comments in binary node apply here.
 //
@@ -139,6 +154,11 @@ void TIntermUnary::traverse(TIntermTraverser *it)
 
     if (visit && it->postVisit)
         it->visitUnary(EvPostVisit, this);
+}
+
+glslang::TSourceLoc* TIntermUnary::getSourceLine()
+{
+    return operand->getSourceLine();
 }
 
 //
@@ -165,8 +185,12 @@ void TIntermAggregate::traverse(TIntermTraverser *it)
             }
         } else {
             for (TIntermSequence::iterator sit = sequence.begin(); sit != sequence.end(); sit++) {
-                (*sit)->traverse(it);
 
+                glslang::TSourceLoc *firstLocInLine = (*sit)->getSourceLine();
+                if (firstLocInLine != nullptr)
+                    it->visitLine(*firstLocInLine);
+
+                (*sit)->traverse(it);
                 if (visit && it->inVisit) {
                     if (*sit != sequence.back())
                         visit = it->visitAggregate(EvInVisit, this);
@@ -213,6 +237,11 @@ void TIntermSelection::traverse(TIntermTraverser *it)
         it->visitSelection(EvPostVisit, this);
 }
 
+glslang::TSourceLoc* TIntermSelection::getSourceLine()
+{
+    return condition->getSourceLine();
+}
+
 //
 // Traverse a loop node.  Same comments in binary node apply here.
 //
@@ -253,6 +282,12 @@ void TIntermLoop::traverse(TIntermTraverser *it)
         it->visitLoop(EvPostVisit, this);
 }
 
+glslang::TSourceLoc* TIntermLoop::getSourceLine()
+{
+    // do not want to show condition
+    return nullptr;
+}
+
 //
 // Traverse a branch node.  Same comments in binary node apply here.
 //
@@ -271,6 +306,13 @@ void TIntermBranch::traverse(TIntermTraverser *it)
 
     if (visit && it->postVisit)
         it->visitBranch(EvPostVisit, this);
+}
+
+glslang::TSourceLoc* TIntermBranch::getSourceLine()
+{
+    if (flowOp == EOpReturn && expression != nullptr)
+        return expression->getSourceLine();
+    return &loc;
 }
 
 //
@@ -297,6 +339,11 @@ void TIntermSwitch::traverse(TIntermTraverser* it)
 
     if (visit && it->postVisit)
         it->visitSwitch(EvPostVisit, this);
+}
+
+glslang::TSourceLoc* TIntermSwitch::getSourceLine()
+{
+    return condition->getSourceLine();
 }
 
 } // end namespace glslang

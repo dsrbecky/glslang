@@ -109,6 +109,7 @@ public:
     bool visitUnary(glslang::TVisit, glslang::TIntermUnary*);
     bool visitLoop(glslang::TVisit, glslang::TIntermLoop*);
     bool visitBranch(glslang::TVisit visit, glslang::TIntermBranch*);
+    void visitLine(glslang::TSourceLoc&);
 
     void dumpSpv(std::vector<unsigned int>& out);
 
@@ -1816,6 +1817,12 @@ bool TGlslangToSpvTraverser::visitBranch(glslang::TVisit /* visit */, glslang::T
     }
 
     return false;
+}
+
+void TGlslangToSpvTraverser::visitLine(glslang::TSourceLoc &loc)
+{
+    if (loc.line > 0)
+        builder.addLine(loc.string, loc.line, loc.column);
 }
 
 spv::Id TGlslangToSpvTraverser::createSpvVariable(const glslang::TIntermSymbol* node)

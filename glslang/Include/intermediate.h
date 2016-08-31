@@ -609,6 +609,7 @@ public:
     virtual const glslang::TSourceLoc& getLoc() const { return loc; }
     virtual void setLoc(const glslang::TSourceLoc& l) { loc = l; }
     virtual void traverse(glslang::TIntermTraverser*) = 0;
+    virtual       glslang::TSourceLoc*           getSourceLine()            { return 0; }
     virtual       glslang::TIntermTyped*         getAsTyped()               { return 0; }
     virtual       glslang::TIntermOperator*      getAsOperator()            { return 0; }
     virtual       glslang::TIntermConstantUnion* getAsConstantUnion()       { return 0; }
@@ -692,6 +693,7 @@ public:
         test(aTest),
         terminal(aTerminal),
         first(testFirst) { }
+    virtual glslang::TSourceLoc* getSourceLine();
     virtual void traverse(TIntermTraverser*);
     TIntermNode*  getBody() const { return body; }
     TIntermTyped* getTest() const { return test; }
@@ -715,6 +717,7 @@ public:
     virtual       TIntermBranch* getAsBranchNode()       { return this; }
     virtual const TIntermBranch* getAsBranchNode() const { return this; }
     virtual void traverse(TIntermTraverser*);
+    virtual glslang::TSourceLoc* getSourceLine();
     TOperator getFlowOp() const { return flowOp; }
     TIntermTyped* getExpression() const { return expression; }
 protected:
@@ -735,6 +738,7 @@ public:
     virtual const TString& getMethodName() const { return method; }
     virtual TIntermTyped* getObject() const { return object; }
     virtual void traverse(TIntermTraverser*);
+    virtual glslang::TSourceLoc* getSourceLine() { return nullptr; }
 protected:
     TIntermTyped* object;
     TString method;
@@ -754,6 +758,7 @@ public:
     virtual int getId() const { return id; }
     virtual const TString& getName() const { return name; }
     virtual void traverse(TIntermTraverser*);
+    virtual glslang::TSourceLoc* getSourceLine();
     virtual       TIntermSymbol* getAsSymbolNode()       { return this; }
     virtual const TIntermSymbol* getAsSymbolNode() const { return this; }
     void setConstArray(const TConstUnionArray& c) { constArray = c; }
@@ -775,6 +780,7 @@ public:
     virtual       TIntermConstantUnion* getAsConstantUnion()       { return this; }
     virtual const TIntermConstantUnion* getAsConstantUnion() const { return this; }
     virtual void traverse(TIntermTraverser*);
+    virtual glslang::TSourceLoc* getSourceLine();
     virtual TIntermTyped* fold(TOperator, const TIntermTyped*) const;
     virtual TIntermTyped* fold(TOperator, const TType&) const;
     void setLiteral() { literal = true; }
@@ -983,6 +989,7 @@ class TIntermBinary : public TIntermOperator {
 public:
     TIntermBinary(TOperator o) : TIntermOperator(o) {}
     virtual void traverse(TIntermTraverser*);
+    virtual glslang::TSourceLoc* getSourceLine();
     virtual void setLeft(TIntermTyped* n) { left = n; }
     virtual void setRight(TIntermTyped* n) { right = n; }
     virtual TIntermTyped* getLeft() const { return left; }
@@ -1004,6 +1011,7 @@ public:
     TIntermUnary(TOperator o, TType& t) : TIntermOperator(o, t), operand(0) {}
     TIntermUnary(TOperator o) : TIntermOperator(o), operand(0) {}
     virtual void traverse(TIntermTraverser*);
+    virtual glslang::TSourceLoc* getSourceLine();
     virtual void setOperand(TIntermTyped* o) { operand = o; }
     virtual       TIntermTyped* getOperand() { return operand; }
     virtual const TIntermTyped* getOperand() const { return operand; }
@@ -1033,6 +1041,7 @@ public:
     virtual void setName(const TString& n) { name = n; }
     virtual const TString& getName() const { return name; }
     virtual void traverse(TIntermTraverser*);
+    virtual glslang::TSourceLoc* getSourceLine() { return nullptr; }
     virtual void setUserDefined() { userDefined = true; }
     virtual bool isUserDefined() { return userDefined; }
     virtual TQualifierList& getQualifierList() { return qualifier; }
@@ -1065,6 +1074,7 @@ public:
     TIntermSelection(TIntermTyped* cond, TIntermNode* trueB, TIntermNode* falseB, const TType& type) :
         TIntermTyped(type), condition(cond), trueBlock(trueB), falseBlock(falseB) {}
     virtual void traverse(TIntermTraverser*);
+    virtual glslang::TSourceLoc* getSourceLine();
     virtual TIntermTyped* getCondition() const { return condition; }
     virtual TIntermNode* getTrueBlock() const { return trueBlock; }
     virtual TIntermNode* getFalseBlock() const { return falseBlock; }
@@ -1086,6 +1096,7 @@ class TIntermSwitch : public TIntermNode {
 public:
     TIntermSwitch(TIntermTyped* cond, TIntermAggregate* b) : condition(cond), body(b) { }
     virtual void traverse(TIntermTraverser*);
+    virtual glslang::TSourceLoc* getSourceLine();
     virtual TIntermNode* getCondition() const { return condition; }
     virtual TIntermAggregate* getBody() const { return body; }
     virtual       TIntermSwitch* getAsSwitchNode()       { return this; }
@@ -1137,6 +1148,7 @@ public:
 
     virtual void visitSymbol(TIntermSymbol*)               { }
     virtual void visitConstantUnion(TIntermConstantUnion*) { }
+    virtual void visitLine(glslang::TSourceLoc&)           { }
     virtual bool visitBinary(TVisit, TIntermBinary*)       { return true; }
     virtual bool visitUnary(TVisit, TIntermUnary*)         { return true; }
     virtual bool visitSelection(TVisit, TIntermSelection*) { return true; }
