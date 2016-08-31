@@ -909,6 +909,13 @@ void Builder::addExecutionMode(Function* entryPoint, ExecutionMode mode, int val
     executionModes.push_back(std::unique_ptr<Instruction>(instr));
 }
 
+Id Builder::makeString(const char* str) {
+    Instruction* instr = new Instruction(getUniqueId(), NoType, OpString);
+    instr->addStringOperand(str);
+    strings.push_back(std::unique_ptr<Instruction>(instr));
+    return instr->getResultId();
+}
+
 void Builder::addName(Id id, const char* string)
 {
     Instruction* name = new Instruction(OpName);
@@ -928,15 +935,19 @@ void Builder::addMemberName(Id id, int memberNumber, const char* string)
     names.push_back(std::unique_ptr<Instruction>(name));
 }
 
-void Builder::addLine(Id target, Id fileName, int lineNum, int column)
+void Builder::addLine(int file, int lineNum, int column)
 {
     Instruction* line = new Instruction(OpLine);
-    line->addIdOperand(target);
-    line->addIdOperand(fileName);
+    // file must be an OpString instruction
+    if (fileToStringId.find(file) == fileToStringId.end())
+        fileToStringId[file] = makeString(std::to_string(file).c_str());
+
+    line->addIdOperand(fileToStringId[file]);
     line->addImmediateOperand(lineNum);
     line->addImmediateOperand(column);
 
-    lines.push_back(std::unique_ptr<Instruction>(line));
+    // insert lines between instructions
+    buildPoint->addInstruction(std::unique_ptr<Instruction>(line));
 }
 
 void Builder::addDecoration(Id id, Decoration decoration, int num)
@@ -2411,6 +2422,8 @@ void Builder::dump(std::vector<unsigned int>& out) const
     dumpInstructions(out, executionModes);
 
     // Debug instructions
+    dumpInstructions(out, strings);
+
     if (source != SourceLanguageUnknown) {
         Instruction sourceInst(0, 0, OpSource);
         sourceInst.addImmediateOperand(source);
