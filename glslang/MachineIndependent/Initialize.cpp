@@ -1711,6 +1711,15 @@ void TBuiltIns::initialize(int version, EProfile profile, const SpvVersion& spvV
     }
 #endif
 
+    // GL_EXT_shadow_samplers
+    if (profile == EEsProfile && version >= 100) {
+        commonBuiltins.append(
+            "float shadow2DEXT(sampler2DShadow, vec3);"
+            "float shadow2DProjEXT(sampler2DShadow, vec4);"
+
+            "\n");
+    }
+
     //============================================================================
     //
     // Prototypes for built-in functions seen by vertex shaders only.
@@ -3951,6 +3960,11 @@ void TBuiltIns::identifyBuiltIns(int version, EProfile profile, const SpvVersion
             BuiltInVariable("gl_InstanceIndex", EbvInstanceIndex, symbolTable);
         }
 
+        if (profile == EEsProfile && version >= 100) {
+            symbolTable.setFunctionExtensions("shadow2DEXT",        1, &E_GL_EXT_shadow_samplers);
+            symbolTable.setFunctionExtensions("shadow2DProjEXT",    1, &E_GL_EXT_shadow_samplers);
+        }
+
         // Fall through
 
     case EShLangTessControl:
@@ -4225,6 +4239,11 @@ void TBuiltIns::identifyBuiltIns(int version, EProfile profile, const SpvVersion
             symbolTable.setFunctionExtensions("imageAtomicXor",      1, &E_GL_OES_shader_image_atomic);
             symbolTable.setFunctionExtensions("imageAtomicExchange", 1, &E_GL_OES_shader_image_atomic);
             symbolTable.setFunctionExtensions("imageAtomicCompSwap", 1, &E_GL_OES_shader_image_atomic);
+        }
+
+        if (profile == EEsProfile && version >= 100) {
+            symbolTable.setFunctionExtensions("shadow2DEXT",        1, &E_GL_EXT_shadow_samplers);
+            symbolTable.setFunctionExtensions("shadow2DProjEXT",    1, &E_GL_EXT_shadow_samplers);
         }
         break;
 
@@ -4563,6 +4582,10 @@ void TBuiltIns::identifyBuiltIns(int version, EProfile profile, const SpvVersion
             symbolTable.relateToOperator("cubeFaceCoordAMD",    EOpCubeFaceCoord);
             symbolTable.relateToOperator("timeAMD",             EOpTime);
 #endif
+        }
+        if (profile == EEsProfile) {
+            symbolTable.relateToOperator("shadow2DEXT",              EOpTexture);
+            symbolTable.relateToOperator("shadow2DProjEXT",          EOpTextureProj);
         }
     }
 
